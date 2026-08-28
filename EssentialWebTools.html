@@ -1,0 +1,1236 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Essential Web Tools</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 50px;
+        }
+
+        .container {
+            padding: 30px;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .blur {
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            /* border: 1px solid rgba(255, 255, 255, 0.3); */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-switch {
+            display: flex;
+            flex-direction: column;
+
+            width: 100%;
+            height: 100%;
+        }
+
+        .tab-labels {
+            display: flex;
+            flex: 0 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .tab-labels>label {
+            padding: 10px;
+            margin-right: 5px;
+            opacity: 0.5;
+            cursor: pointer;
+            order: -1;
+            text-align: center;
+            border-bottom-left-radius: 0px;
+            border-bottom-right-radius: 0px;
+            box-shadow: none;
+        }
+
+        .tab-labels input {
+            display: none;
+        }
+
+        .tab-content {
+            display: none;
+            /* display: flex; */
+            flex-direction: column;
+            width: 100%;
+            padding: 30px;
+            border-top-left-radius: 0px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .tab-switch label:has(:checked) {
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        .tool-container {
+            padding-bottom: 10px;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .separator-ui {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .separator-ui .separated-content {
+            flex: 1;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .separator-ui .separated-content:has(#image-div) {
+            container-type: size;
+            display: grid;
+            place-items: center;
+        }
+
+        .separator-ui .separator {
+            align-content: center;
+            padding: 10px;
+            height: 100%;
+        }
+
+        textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+        }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: stretch;
+        }
+
+        input[type="range"] {
+            padding: 10px 0px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: stretch;
+        }
+
+        button {
+            height: 100%;
+            min-height: 30px;
+            padding: 0px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button:active {
+            background: #ccc;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cell-label {
+            width: 50px;
+        }
+
+        .cell-content {
+            flex: 1;
+        }
+
+        .fill {
+            flex: 1;
+        }
+
+        .wide {
+            width: 100%;
+        }
+
+        .maxsize {
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            --size: 20px;
+            background: conic-gradient(#aaa 25%, #888 0 50%, #aaa 0 75%, #888 0) 0 0 / var(--size) var(--size);
+        }
+
+        #image-div {
+            width: min(100cqw, 100cqh);
+            height: min(100cqw, 100cqh);
+            display: grid;
+            place-items: center;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        #image-div img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #content-div {
+            overflow: auto;
+        }
+
+        .link-list {
+            width: 25%;
+            min-width: 200px;
+        }
+
+        @media screen and (orientation: portrait) {
+            .link-list {
+                width: 50%;
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container blur">
+        <div class="tab-switch">
+            <div class="tab-labels">
+                <label class="blur"><input type="radio" name="TAB">リンク集</label>
+                <label class="blur"><input type="radio" name="TAB">文字列操作</label>
+                <label class="blur"><input type="radio" name="TAB">正規表現</label>
+                <label class="blur"><input type="radio" name="TAB">画像編集</label>
+                <label class="blur"><input type="radio" name="TAB">開発方針</label>
+            </div>
+            <div class="tab-content blur">
+                <div style="display:flex;flex-wrap: wrap;">
+                    <ul class="link-list">
+                        <li><a href="https://translate.google.com">Google翻訳</a></li>
+                        <li><a href="https://www.deepl.com/ja/translator">DeepL翻訳</a></li>
+                    </ul>
+                    <ul class="link-list">
+                        <li><a href="https://translate.google.com">Google翻訳</a></li>
+                        <li><a href="https://www.deepl.com/ja/translator">DeepL翻訳</a></li>
+                    </ul>
+                    <ul class="link-list">
+                        <li><a href="https://translate.google.com">Google翻訳</a></li>
+                        <li><a href="https://www.deepl.com/ja/translator">DeepL翻訳</a></li>
+                    </ul>
+                    <ul class="link-list">
+                        <li><a href="https://translate.google.com">Google翻訳</a></li>
+                        <li><a href="https://www.deepl.com/ja/translator">DeepL翻訳</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="tab-content blur">
+                <div class="tool-container">
+                    <select id="text-exchange-option">
+                        <option value="url">URL Encode</option>
+                        <option value="unicode">Unicode Escape</option>
+                        <option value="base64">Base64</option>
+                        <option value="ascii">ASCII</option>
+                        <option value="json">Json Format</option>
+                        <option value="sort">Sort</option>
+                        <option value="distinct">Distinct</option>
+                        <option value="base64image">Base64 Image</option>
+                        <option value="copy">転写</option>
+                    </select>
+                    <button id="text-exchange-save" hidden>ファイルとして保存</button>
+                </div>
+                <div class="separator-ui">
+                    <div class="separated-content">
+                        <textarea class="maxsize" id="text-exchange-input1"></textarea>
+                    </div>
+                    <div class="separator">⇔</div>
+                    <div class="separated-content">
+                        <textarea class="maxsize" id="text-exchange-input2"></textarea>
+                        <div class="maxsize" id="image-div" style="display: none;"></div>
+                        <div class="maxsize" id="content-div" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content blur">
+                <div class="tool-container">
+                    <div class="separated-content column">
+                        <button id="regex-replace-button">置換</button>
+                        <button id="regex-extract-button">抽出</button>
+                    </div>
+                    <div class="separated-content column fill">
+                        <input type="text" class="" id="regex-processor-input1" value=".+"></input>
+                        <input type="text" class="" id="regex-processor-input2" value="${&}"></input>
+                    </div>
+                </div>
+                <div class="separator-ui">
+                    <textarea class="separated-content" id="regex-processor-input3"></textarea>
+                    <div class="separator">⇒</div>
+                    <textarea class="separated-content" id="regex-processor-input4">${key}: 文字列置換
+${key}[-&gt;]: 大文字化
+${key}[&lt;-]: 小文字化
+${key}[&gt;&gt;]: 全角化
+${key}[&lt;&lt;]: 半角化
+${key}[trim]: 前後の空白を削除
+${key}[len]: 文字列の長さを取得
+${key}[func(x)]: 任意の関数を実行
+                    </textarea>
+                </div>
+            </div>
+            <div class="tab-content blur">
+                <div class="separator-ui">
+                    <div class="separated-content">
+                        <canvas id="image-editor"></canvas>
+                    </div>
+                    <div class="separator">　</div>
+                    <div class="separated-content column">
+                        <div class="maxsize column">
+                            <div class="row">
+                                <input type="file" id="file-selector" accept="image/*|application/pdf" hidden>
+                                <button class="cell-content" onclick="$('#file-selector').click();">ファイルを開く</button>
+                                <button class="cell-content" id="image-rect-reset">リセット</button>
+                            </div>
+                            <div class="row">
+                                <div class="cell-label">位置X</div>
+                                <div class="cell-content"><input type="number" id="image-rect-x" value="0"></div>
+                                <div class="cell-label">幅<input type="checkbox" id="image-rect-lock"></div>
+                                <div class="cell-content"><input type="number" id="image-rect-width" value="0"></div>
+                            </div>
+                            <div class="row">
+                                <div class="cell-label">位置Y</div>
+                                <div class="cell-content"><input type="number" id="image-rect-y" value="0"></div>
+                                <div class="cell-label">高さ</div>
+                                <div class="cell-content"><input type="number" id="image-rect-height" value="0"></div>
+                            </div>
+                            <div class="row">
+                                <div class="cell-label">色相</div>
+                                <div class="cell-content"><input type="range" id="image-hue" max="360" min="0"
+                                        value="0">
+                                </div>
+                                <div class="cell-label">彩度</div>
+                                <div class="cell-content"><input type="range" id="image-sat" max="255" min="0"
+                                        value="255">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <button class="cell-content" id="image-rect-minimize">縮小</button>
+                                <button class="cell-content" id="image-rect-clip">切り抜き</button>
+                            </div>
+                            <div class="row">
+                                <div class="cell-label">形式</div>
+                                <div class="cell-content">
+                                    <select class="wide" id="image-export-option">
+                                        <option value="png">PNG</option>
+                                        <option value="jpg">JPEG</option>
+                                        <option value="webp">WebP</option>
+                                        <option value="webp-lossless">WebP（ロスレス）</option>
+                                        <option value="ico">ICO</option>
+                                        <option value="zip">ZIP</option>
+                                    </select>
+                                </div>
+                                <div class="cell-label">ページ</div>
+                                <div class="cell-content"><input type="number" id="image-pdf-page" min="1" value="1">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <button class="cell-content" id="image-export-file">ファイルとして保存</button>
+                                <button class="cell-content" id="image-export-copy">Base64でコピー</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content blur">
+                <div class="tab-content-inner">
+                    <p>便利な機能を、いつでもどこでも安心して利用できるツールを目指しています。
+                        情報の安全性に配慮し、入力されたデータを外部へアップロードすることなく、
+                        ローカル環境内で処理を完結する設計を採用しています。そのため、
+                        入力されたデータがサーバーなどへ送信されることはありません。また、
+                        外部ライブラリへの依存を必要最小限に抑え、可能な限りネイティブJavaScriptによる実装を採用しています。
+                        これにより、軽量でシンプルかつ、安心して利用できるツールの開発を目指しています。</p>
+                    <p>本ツールでは、以下のライブラリを使用しています。</p>
+                    <ul>
+                        <li>
+                            PDFファイルの画像ファイル化のため、
+                            <a href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">PDFjsLib</a>
+                            を使用しています。このライブラリはPDFファイルの資料を画像として保存でき、
+                            MSペイントでの直接書き込みや、PowerPointへの高画質貼り付けが可能です。
+                            ライブラリの使用にはネットワークが必要ですが、PDFファイルがアップロードされることはありません。
+                        </li>
+                        <li>
+                            ZIPファイルの作成のため、
+                            <a href="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">JSZip</a>
+                            を使用しています。このライブラリはPDFファイルの全ページを画像する際に、
+                            まとめてダウンロードできるようにするために使用されています。
+                            ライブラリの使用にはネットワークが必要ですが、ZIPファイルがアップロードされることはありません。
+                        </li>
+                    </ul>
+                    <p>
+                        本ツールは<a href="https://github.com/kiguh-mp4/EssentialWebTools">GitHub</a>
+                        で公開されています。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const $ = e => document.querySelector(e);
+        const wallpapers = [
+            "bg.png",
+        ];
+        const openedFiles = [];
+        let wakeLock = null;
+        const editor = {
+            canvas: $("#image-editor"),
+            cache: null,
+            ctx: null,
+            pdf: null,
+            originalData: null,
+            imageData: null,
+            bounds: {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0
+            },
+            initialize: function () {
+                this.ctx = this.canvas.getContext("2d");
+                this.ctx.imageSmoothingEnabled = false;
+            },
+            open: async function (file) {
+                if (file.name.endsWith(".pdf")) {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+                    const buffer = await file.arrayBuffer();
+                    this.pdf = await pdfjsLib.getDocument(buffer).promise;
+                    await this.renderPdf(1);
+                } else {
+                    const bitmap = await createImageBitmap(file);
+                    this.openImageData(bitmap);
+                }
+            },
+            openImageData: function (bitmap) {
+                this.cache = document.createElement("canvas");
+                this.cache.width = bitmap.width;
+                this.cache.height = bitmap.height;
+
+                this.bounds.width = bitmap.width;
+                this.bounds.height = bitmap.height;
+
+                const tempCtx = this.cache.getContext("2d");
+                tempCtx.drawImage(bitmap, 0, 0);
+
+                this.originalData = tempCtx.getImageData(0, 0, this.cache.width, this.cache.height);
+                this.imageData = new ImageData(
+                    new Uint8ClampedArray(this.originalData.data),
+                    this.originalData.width,
+                    this.originalData.height
+                );
+
+                try {
+                    bitmap.close();
+                } catch {
+
+                }
+
+                return this.imageData.data;
+            },
+            cloneImageData: function () {
+                this.imageData = new ImageData(
+                    new Uint8ClampedArray(this.originalData.data),
+                    this.originalData.width,
+                    this.originalData.height
+                );
+                return this.imageData.data;
+            },
+            draw: function (ctx, x, y, w, h) {
+                this.cache.width = this.imageData.width;
+                this.cache.height = this.imageData.height;
+                this.cache.getContext("2d").putImageData(this.imageData, 0, 0);
+
+                ctx.clearRect(x, y, w, h);
+                ctx.drawImage(this.cache, x, y, w, h);
+            },
+            rect: function (x, y, w, h) {
+                this.ctx.strokeStyle = "Red";
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(x, y, w, h);
+            },
+            refresh: function () {
+                this.canvas.width = this.canvas.clientWidth;
+                this.canvas.height = this.canvas.clientHeight;
+                const scale = Math.min(this.canvas.width / this.imageData.width, this.canvas.height / this.imageData.height);
+
+                const drawWidth = this.imageData.width * scale;
+                const drawHeight = this.imageData.height * scale;
+
+                const x = (this.canvas.width - drawWidth) / 2;
+                const y = (this.canvas.height - drawHeight) / 2;
+
+                this.draw(this.ctx, x, y, drawWidth, drawHeight);
+                this.rect(x + this.bounds.x * scale, y + this.bounds.y * scale, this.bounds.width * scale, this.bounds.height * scale);
+            },
+            rotateHueSat: function (degree, saturation) {
+                const data = this.cloneImageData();
+
+                for (let i = 0; i < data.length; i += 4) {
+                    let r = data[i] / 255;
+                    let g = data[i + 1] / 255;
+                    let b = data[i + 2] / 255;
+
+                    const max = Math.max(r, g, b);
+                    const min = Math.min(r, g, b);
+                    const d = max - min;
+
+                    let h = 0;
+                    const s = max === 0 ? 0 : d / max * saturation;
+                    const v = max;
+
+                    if (d !== 0) {
+                        switch (max) {
+                            case r:
+                                h = ((g - b) / d + (g < b ? 6 : 0));
+                                break;
+                            case g:
+                                h = ((b - r) / d + 2);
+                                break;
+                            case b:
+                                h = ((r - g) / d + 4);
+                                break;
+                        }
+                        h *= 60;
+                    }
+
+                    h = (h + degree) % 360;
+
+                    const c = v * s;
+                    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+                    const m = v - c;
+
+                    let rr, gg, bb;
+
+                    if (h < 60) {
+                        [rr, gg, bb] = [c, x, 0];
+                    } else if (h < 120) {
+                        [rr, gg, bb] = [x, c, 0];
+                    } else if (h < 180) {
+                        [rr, gg, bb] = [0, c, x];
+                    } else if (h < 240) {
+                        [rr, gg, bb] = [0, x, c];
+                    } else if (h < 300) {
+                        [rr, gg, bb] = [x, 0, c];
+                    } else {
+                        [rr, gg, bb] = [c, 0, x];
+                    }
+
+                    data[i] = Math.round((rr + m) * 255);
+                    data[i + 1] = Math.round((gg + m) * 255);
+                    data[i + 2] = Math.round((bb + m) * 255);
+                }
+
+                this.refresh();
+            },
+            minimize: function () {
+                const dstCanvas = document.createElement("canvas");
+                dstCanvas.width = this.bounds.width;
+                dstCanvas.height = this.bounds.height;
+
+                const ctx = dstCanvas.getContext("2d");
+                this.draw(ctx, 0, 0, this.bounds.width, this.bounds.height);
+
+                this.originalData = ctx.getImageData(0, 0, this.bounds.width, this.bounds.height);
+                this.imageData = new ImageData(
+                    new Uint8ClampedArray(this.originalData.data),
+                    this.originalData.width,
+                    this.originalData.height
+                );
+                this.bounds.x = this.bounds.y = 0;
+            },
+            clip: function () {
+                const x = Math.trunc(this.bounds.x);
+                const y = Math.trunc(this.bounds.y);
+                const width = Math.trunc(this.bounds.width);
+                const height = Math.trunc(this.bounds.height);
+
+                const clippedData = new ImageData(width, height);
+
+                const srcLeft = Math.max(0, x);
+                const srcTop = Math.max(0, y);
+                const srcRight = Math.min(this.imageData.width, x + width);
+                const srcBottom = Math.min(this.imageData.height, y + height);
+
+                const copyWidth = Math.max(0, srcRight - srcLeft);
+                const copyHeight = Math.max(0, srcBottom - srcTop);
+
+                if (copyWidth > 0 && copyHeight > 0) {
+                    const srcData = this.imageData.data;
+                    const dstData = clippedData.data;
+                    const srcStride = this.imageData.width * 4;
+                    const dstStride = width * 4;
+                    const dstX = srcLeft - x;
+                    const dstY = srcTop - y;
+                    const copyBytes = copyWidth * 4;
+
+                    for (let row = 0; row < copyHeight; row++) {
+                        const srcStart = (srcTop + row) * srcStride + srcLeft * 4;
+                        const dstStart = (dstY + row) * dstStride + dstX * 4;
+
+                        dstData.set(
+                            srcData.subarray(srcStart, srcStart + copyBytes),
+                            dstStart
+                        );
+                    }
+                }
+
+                this.originalData = clippedData;
+                this.imageData = new ImageData(
+                    new Uint8ClampedArray(clippedData.data),
+                    clippedData.width,
+                    clippedData.height
+                );
+                this.bounds.x = this.bounds.y = 0;
+            },
+            downloadImage: async function (ext) {
+                if (ext == "ico") {
+                    let name = openedFiles[openedFiles.length - 1].name;
+                    if (name.includes(".")) name = name.slice(0, name.lastIndexOf("."));
+                    downloadFile(this.canvasToICO(), name + ".ico");
+                    return;
+                }
+                if (ext == "zip") {
+                    if (this.pdf) {
+                        const name = openedFiles.reverse().findLast(x => x.name.endsWith(".pdf")).name;
+                        const list = await this.exportPdfAll();
+                        const files = list.map((x, i) => ({ name: `${name} - ${i.toString().padStart(3, "0")}.png`, data: x }));
+                        const blob = await generateZipFile(files)
+                        downloadFile(blob, `${name}.zip`);
+                    }
+                    return;
+                }
+                if (ext == "zip") {
+                    if (this.pdf) {
+                        const name = openedFiles.reverse().findLast(x => x.name.endsWith(".pdf")).name;
+                        const list = await this.exportPdfAll();
+                        const files = list.map((x, i) => ({ name: `${name} - ${i.toString().padStart(3, "0")}.png`, data: x }));
+                        const blob = await generateZipFile(files)
+                        downloadFile(blob, `${name}.zip`);
+                    }
+                    return;
+                }
+
+                const dstCanvas = document.createElement("canvas");
+                dstCanvas.width = this.imageData.width;
+                dstCanvas.height = this.imageData.height;
+
+                const ctx = dstCanvas.getContext("2d");
+                this.draw(ctx, 0, 0, this.imageData.width, this.imageData.height);
+
+                let name = openedFiles[openedFiles.length - 1].name;
+                if (name.includes(".")) name = name.slice(0, name.lastIndexOf("."))
+
+                if (ext == "webp-lossless") {
+                    dstCanvas.toBlob(blob => {
+                        downloadFile(blob, `${name}.webp`);
+                    }, "image/webp", 1.0);
+
+                    return;
+                }
+
+                dstCanvas.toBlob(blob => {
+                    downloadFile(blob, `${name}.${ext}`);
+                }, `image/${ext.replace("jpg", "jpeg")}`);
+            },
+            canvasToICO: function () {
+                const rgba = this.imageData.data;
+                const w = this.imageData.width;
+                const h = this.imageData.height;
+
+                const headerSize = 40;
+                const pixelSize = w * h * 4;
+                const bmpSize = headerSize + pixelSize;
+
+                const icoSize = 6 + 16 + bmpSize;
+
+                const buffer = new ArrayBuffer(icoSize);
+                const view = new DataView(buffer);
+
+                let offset = 0;
+
+                view.setUint16(offset, 0, true); offset += 2;
+                view.setUint16(offset, 1, true); offset += 2;
+                view.setUint16(offset, 1, true); offset += 2;
+
+                view.setUint8(offset++, w);
+                view.setUint8(offset++, h);
+                view.setUint8(offset++, 0);
+                view.setUint8(offset++, 0);
+                view.setUint16(offset, 1, true); offset += 2;
+                view.setUint16(offset, 32, true); offset += 2;
+                view.setUint32(offset, bmpSize, true); offset += 4;
+                view.setUint32(offset, 22, true); offset += 4;
+
+                view.setUint32(offset, 40, true); offset += 4;
+                view.setInt32(offset, w, true); offset += 4;
+                view.setInt32(offset, h * 2, true); offset += 4;
+                view.setUint16(offset, 1, true); offset += 2;
+                view.setUint16(offset, 32, true); offset += 2;
+                view.setUint32(offset, 0, true); offset += 4;
+                view.setUint32(offset, pixelSize, true); offset += 4;
+                view.setInt32(offset, 0, true); offset += 4;
+                view.setInt32(offset, 0, true); offset += 4;
+                view.setUint32(offset, 0, true); offset += 4;
+                view.setUint32(offset, 0, true); offset += 4;
+
+                const bytes = new Uint8Array(buffer);
+
+                for (let y = h - 1; y >= 0; y--) {
+                    for (let x = 0; x < w; x++) {
+
+                        const i = (y * w + x) * 4;
+
+                        bytes[offset++] = rgba[i + 2];
+                        bytes[offset++] = rgba[i + 1];
+                        bytes[offset++] = rgba[i];
+                        bytes[offset++] = rgba[i + 3];
+                    }
+                }
+
+                return new Blob([buffer], { type: "image/x-icon" });
+            },
+            copyToClipboard: async function (ext) {
+                try {
+                    const dstCanvas = document.createElement("canvas");
+                    dstCanvas.width = this.imageData.width;
+                    dstCanvas.height = this.imageData.height;
+
+                    const ctx = dstCanvas.getContext("2d");
+                    this.draw(ctx, 0, 0, this.imageData.width, this.imageData.height);
+
+                    let base64 = "";
+                    if (ext == "webp-lossless") {
+                        base64 = dstCanvas.toDataURL("image/webp", 1.0);
+                    } else {
+                        base64 = dstCanvas.toDataURL(`image/${ext.replace("jpg", "jpeg")}`);
+                    }
+
+                    await navigator.clipboard.writeText(base64);
+
+                    alert("Base64をクリップボードにコピーしました");
+                } catch (err) {
+                    console.error(err);
+                    alert("コピーに失敗しました");
+                }
+            },
+            renderPdf: async function (index) {
+                const page = await this.pdf.getPage(index);
+                const viewport = await page.getViewport({ scale: 4 });
+                const dstCanvas = document.createElement("canvas");
+
+                dstCanvas.width = viewport.width;
+                dstCanvas.height = viewport.height;
+
+                await page.render({ canvasContext: dstCanvas.getContext("2d"), viewport: viewport }).promise
+
+                this.openImageData(dstCanvas);
+            },
+            exportPdfAll: async function () {
+                const list = [];
+                const dstCanvas = document.createElement("canvas");
+                dstCanvas.width = this.imageData.width;
+                dstCanvas.height = this.imageData.height;
+
+                for (let i = 1; i <= this.pdf.numPages; i++) {
+                    const page = await this.pdf.getPage(i);
+                    const viewport = await page.getViewport({ scale: 4 });
+
+                    await page.render({ canvasContext: dstCanvas.getContext("2d"), viewport: viewport }).promise
+
+                    const blob = await new Promise((resolve, reject) => dstCanvas.toBlob(blob => resolve(blob), "image/png"));
+                    list.push(blob);
+                }
+
+                return list;
+            }
+        };
+        const debug = {
+            a: function (a, b) {
+                return a.chunk(1 / b.length).map((c, d) => (c[0] >> b[d % b.length]) & (b.length - 1));
+            },
+            b: function (a, b) {
+                return a.filter((c, d) => d % b.length != b.length - 1).chunk(b.length).map(c => c.reduce((d, e, f) => d += (e & (b.length - 1)) << b[f], 0));
+            },
+            c: function (a, b, c) {
+                const d = c.length - 1;
+                let e = 0;
+                for (let i = 0; i < a.length; i++) {
+                    if (i % c.length == d) continue;
+                    a[i] = (a[i] & ~d) + b[e++ % b.length];
+                }
+            },
+            d: async function (a) {
+                return new Promise(b => setTimeout(b, a));
+            },
+            e: async function (a, b, c, d, e) {
+                await this.d(0x4000);
+                for (const f of a.chunk(e)) {
+                    this.g(b, d, f);
+                    await this.d(c);
+                }
+            },
+            f: function (a, b, c, e) {
+                return a.slice(0, b).chunk(c).map((x, y) => e(x, y));
+            },
+            g: function (a, b, c) {
+                a.style.display = "";
+                a.style.gap = "30px";
+                a.innerHTML = "";
+                c.forEach(x => b(x));
+            }
+        };
+
+        Array.prototype.chunk = function (size) {
+            const result = [];
+
+            for (let i = 0; i < this.length; i += size) {
+                result.push(this.slice(Math.floor(i), Math.floor(i) + Math.max(1, size)));
+            }
+
+            return result;
+        };
+
+        String.prototype.chunk = function (size) {
+            const result = [];
+
+            for (let i = 0; i < this.length; i += size) {
+                result.push(this.slice(Math.floor(i), Math.floor(i) + Math.max(1, size)));
+            }
+
+            return result;
+        };
+
+        function utf8ToBase64(str) {
+            const encoder = new TextEncoder();
+            const uint8Array = encoder.encode(str);
+
+            const binaryStr = Array.from(uint8Array).map(byte => String.fromCharCode(byte)).join("");
+
+            return btoa(binaryStr);
+        }
+
+        function base64ToUtf8(base64) {
+            const binaryStr = atob(base64);
+
+            const uint8Array = new Uint8Array([...binaryStr].map(char => char.charCodeAt(0)));
+
+            const decoder = new TextDecoder();
+            return decoder.decode(uint8Array);
+        }
+
+        function base64ToBlob(dataUri) {
+            const [header, base64] = dataUri.split(",");
+
+            const mime = header.match(/data:(.*?);base64/)?.[1] || "application/octet-stream";
+
+            const byteCharacters = atob(base64);
+            const byteArray = new Uint8Array(byteCharacters.length);
+
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteArray[i] = byteCharacters.charCodeAt(i);
+            }
+
+            return new Blob([byteArray], { type: mime });
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        async function keepScreenOn() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+            }
+        }
+
+        function isPlainObject(value) {
+            return value !== null &&
+                typeof value === "object" &&
+                !Array.isArray(value);
+        }
+
+        function toArray(list) {
+            return Array.from(new Uint8Array(list));
+        }
+
+        function toZenkaku(str) {
+            return str
+                .replace(/[!-~]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xFEE0))
+                .replace(/ /g, "　");
+        }
+
+        function toHankaku(str) {
+            return str
+                .replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                .replace(/　/g, " ");
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function dataUrlToBitmap(dataUrl) {
+            const response = await fetch(dataUrl);
+            const blob = await response.blob();
+
+            return await createImageBitmap(blob);
+        }
+
+        function downloadFile(blob, file) {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = file;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function generateZipFile(files) {
+            const zip = new JSZip();
+
+            for (const file of files) {
+                if (file instanceof File) {
+                    zip.file(file.name, file);
+                } else {
+                    zip.file(file.name, file.data);
+                }
+            }
+
+            const blob = await zip.generateAsync({
+                type: "blob",
+                compression: "DEFLATE",
+                compressionOptions: { level: 9 }
+            });
+
+            return blob;
+        }
+
+        //初期化
+        if (true) {
+            document.querySelectorAll("a").forEach(a => a.target = "_blank");
+            const tabLabels = document.querySelectorAll(".tab-labels label");
+            const tabContents = document.querySelectorAll(".tab-content");
+            tabLabels.forEach((label, index) => {
+                label.addEventListener("click", () => {
+                    tabContents.forEach(x => x.style.display = "none");
+                    tabContents[index].style.display = "flex";
+                });
+            });
+
+            tabLabels[0].click();
+
+            const wallpaper = wallpapers[randomInt(0, wallpapers.length - 1)];
+
+            if (wallpaper.startsWith("data:")) {
+                const blob = base64ToBlob(wallpaper);
+                const url = URL.createObjectURL(blob);
+                document.body.style.background = `url("${url}")`;
+            } else {
+                document.body.style.background = `url("${wallpaper}")`;
+            }
+
+            (async () => await keepScreenOn())();
+        }
+
+        //文字列変換
+        if (true) {
+            const option = $("#text-exchange-option");
+            const input1 = $("#text-exchange-input1");
+            const input2 = $("#text-exchange-input2");
+            const image = $("#image-div");
+            const content = $("#content-div");
+            const saveButton = $("#text-exchange-save");
+
+            option.addEventListener("change", () => {
+                if (option.value == "base64image") {
+                    input2.style.display = "none";
+                    content.style.display = "none";
+                    image.style.display = "block";
+                    saveButton.hidden = false;
+                } else if (option.value == "copy") {
+                    input2.style.display = "none";
+                    content.style.display = "block";
+                    image.style.display = "none";
+                    saveButton.hidden = true;
+                } else {
+                    input2.style.display = "block";
+                    content.style.display = "none";
+                    image.style.display = "none";
+                    saveButton.hidden = true;
+                }
+            });
+            input1.addEventListener("input", () => {
+                try {
+                    switch (option.value) {
+                        case "url":
+                            input2.value = encodeURIComponent(input1.value);
+                            break;
+                        case "unicode":
+                            input2.value = input1.value.split("").map(c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")).join("");
+                            break;
+                        case "base64":
+                            input2.value = utf8ToBase64(input1.value);
+                            break;
+                            break;
+                        case "ascii":
+                            input2.value = input1.value.split(",").map(code => String.fromCharCode(Number(code))).join("");
+                            break;
+                        case "json":
+                            const obj = JSON.parse(input1.value);
+                            input2.value = JSON.stringify(obj, null, 4);
+                            break;
+                        case "sort":
+                            input2.value = input1.value.split("\n").sort().join("\n");
+                            break;
+                        case "distinct":
+                            input2.value = Array.from(new Set(input1.value.split("\n"))).join("\n");
+                            break;
+                        case "base64image":
+                            for (let img of document.querySelectorAll("#image-div img")) {
+                                URL.revokeObjectURL(img.src);
+                                img.remove();
+                            }
+                            const img = document.createElement("img");
+                            img.src = URL.createObjectURL(base64ToBlob(input1.value));
+                            image.appendChild(img);
+                            break;
+                        case "copy":
+                            content.innerText = input1.value;
+                            break;
+                    }
+                } catch (e) {
+                    input2.value = e;
+                    console.log(e);
+                }
+            });
+            input2.addEventListener("input", () => {
+                try {
+                    switch (option.value) {
+                        case "url":
+                            input1.value = decodeURIComponent(input2.value);
+                            break;
+                        case "unicode":
+                            input1.value = input2.value.replace(/\\u[\dA-F]{4}/gi,
+                                (match) => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)));
+                            break;
+                        case "ascii":
+                            input1.value = [...input2.value].map(char => char.charCodeAt(0)).join(",");
+                            break;
+                        case "base64":
+                            input1.value = base64ToUtf8(input2.value);
+                            break;
+                        case "json":
+                            const obj = JSON.parse(input2.value);
+                            input1.value = JSON.stringify(obj);
+                            break;
+                    }
+                } catch (e) {
+                    input1.value = e;
+                }
+            });
+            saveButton.addEventListener("click", () => downloadFile(base64ToBlob(input1.value), "image." + input1.value.split(",")[0].match("(?<=/).+(?=;base64)")[0]));
+        }
+
+        //正規表現
+        if (true) {
+            const input1 = $("#regex-processor-input1");
+            const input2 = $("#regex-processor-input2");
+            const input3 = $("#regex-processor-input3");
+            const input4 = $("#regex-processor-input4");
+            const button1 = $("#regex-replace-button");
+            const button2 = $("#regex-extract-button");
+
+            const func = (match, ...args) => {
+                const groups = isPlainObject(args.at(-1)) ? args.at(-1) : {};
+                let template = input2.value
+
+                template = template.replace(/\$\{(?<key>.+?)\}(\[(?<cmd>.+)\])?/g, (x, ...y) => {
+                    const key = y.at(-1).key;
+                    const cmd = y.at(-1).cmd;
+                    let result = key == "&" ? match : groups[key] ?? x;
+
+                    if (cmd == "<-") {
+                        result = result.toLowerCase();
+                    } else if (cmd == "->") {
+                        result = result.toUpperCase();
+                    } else if (cmd == "<<") {
+                        result = toHankaku(result);
+                    } else if (cmd == ">>") {
+                        result = toZenkaku(result);
+                    } else if (cmd == "trim") {
+                        result = result.trim();
+                    } else if (cmd == "len") {
+                        result = result.length;
+                    } else if (cmd) {
+                        result = (new Function("x", "return " + cmd))(result);
+                    }
+
+                    return result;
+                });
+
+                return template;
+            };
+
+            button1.addEventListener("click", () => {
+                try {
+                    input4.value = input3.value.replace(RegExp(input1.value, "g"), func);
+                } catch (e) {
+                    input4.value = e;
+                }
+            });
+
+            button2.addEventListener("click", () => {
+                try {
+                    input4.value = [...input3.value.matchAll(RegExp(input1.value, "g"))].map(x => func(x[0], ...x)).join("\n");
+                } catch (e) {
+                    input4.value = e;
+                }
+            });
+        }
+
+        //画像編集
+        if (true) {
+            const fileSelector = $("#file-selector");
+            const rectX = $("#image-rect-x");
+            const rectY = $("#image-rect-y");
+            const rectWidth = $("#image-rect-width");
+            const rectHeight = $("#image-rect-height");
+            const rectLock = $("#image-rect-lock");
+            const resetButton = $("#image-rect-reset");
+            const hue = $("#image-hue");
+            const sat = $("#image-sat");
+            const minimizeButton = $("#image-rect-minimize");
+            const clipButton = $("#image-rect-clip");
+            const typeOption = $("#image-export-option");
+            const exportFile = $("#image-export-file");
+            const exportCopy = $("#image-export-copy");
+            const pdfPage = $("#image-pdf-page");
+
+            const rectChange = e => {
+                if (rectLock.checked) {
+                    if (e.currentTarget == rectWidth) {
+                        rectHeight.value = Math.round(editor.bounds.height / editor.bounds.width * rectWidth.value);
+                    } else if (e.currentTarget == rectHeight) {
+                        rectWidth.value = Math.round(editor.bounds.width / editor.bounds.height * rectHeight.value);
+                    }
+                    rectX.value = parseInt(rectX.value) + (editor.bounds.width - parseInt(rectWidth.value)) / 2;
+                    rectY.value = parseInt(rectY.value) + (editor.bounds.height - parseInt(rectHeight.value)) / 2;
+                }
+
+                editor.bounds.x = parseInt(rectX.value);
+                editor.bounds.y = parseInt(rectY.value);
+                editor.bounds.width = parseInt(rectWidth.value);
+                editor.bounds.height = parseInt(rectHeight.value);
+
+                editor.refresh();
+            };
+            const rectWheel = e => {
+                e.currentTarget.value = parseInt(e.currentTarget.value) - Math.round(e.deltaY / 10);
+                rectChange(e);
+                e.preventDefault();
+            };
+            const rectReset = () => {
+                rectX.value = 0;
+                rectY.value = 0;
+                rectWidth.value = editor.imageData.width;
+                rectHeight.value = editor.imageData.height;
+                rectLock.checked = false;
+                hue.value = 0;
+                sat.value = 255;
+                pdfPage.value = 1;
+                rectChange();
+                editor.rotateHueSat(parseInt(hue.value), parseInt(sat.value) / 255);
+            };
+
+            editor.initialize();
+
+            fileSelector.addEventListener("change", e => {
+                [...e.target.files].forEach(x => openedFiles.push(x));
+                const file = e.target.files[0];
+                if (!file) return;
+
+                editor.open(file).then(() => rectReset());
+            });
+
+            [rectX, rectY, rectWidth, rectHeight].forEach(x => {
+                x.addEventListener("wheel", rectWheel);
+                x.addEventListener("input", rectChange);
+            });
+
+            [hue, sat].forEach(x => x.addEventListener("input", () => editor.rotateHueSat(parseInt(hue.value), parseInt(sat.value) / 255)));
+
+            resetButton.addEventListener("click", rectReset);
+            minimizeButton.addEventListener("click", () => {
+                editor.minimize();
+                rectReset();
+            });
+            clipButton.addEventListener("click", () => {
+                editor.clip();
+                rectReset();
+            });
+            exportFile.addEventListener("click", async () => await editor.downloadImage(typeOption.value));
+            exportCopy.addEventListener("click", () => editor.copyToClipboard(typeOption.value));
+            pdfPage.addEventListener("change", () => editor.renderPdf(parseInt(pdfPage.value)).then(() => editor.refresh()));
+        }
+    </script>
+</body>
+
+</html>
+
+</html>
