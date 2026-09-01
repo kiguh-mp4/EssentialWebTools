@@ -409,7 +409,7 @@ ${key}[func(x)]: 任意の関数を実行
                     <p>
                         本ツールは<a href="https://github.com/kiguh-mp4/EssentialWebTools">GitHub</a>
                         で公開されています。<a href="javascript:void(0);"
-                            onclick="updateContent();">ここ</a>をクリックして、データ移行済みの最新HTMLを取得できます。
+                            onclick="updateContent();" target="_self">ここ</a>をクリックして、データ移行済みの最新HTMLを取得できます。
                     </p>
                 </div>
             </div>
@@ -975,10 +975,10 @@ ${key}[func(x)]: 任意の関数を実行
 
             doc.querySelector("#link-div").innerHTML = ($("#link-div") || $(".link-list").parentElement).innerHTML;
 
-            const html = doc.documentElement.outerHTML;
+            let html = doc.documentElement.outerHTML;
             const script = wallpapers.map(wallpaper => `"${wallpaper}"`).join(",\n");
 
-            html = html.replace('const wallpapers = ["bg.png"];', 'const wallpapers = [' + script + '];');
+            html = html.replace('const wallpapers = ["bg.png"];', 'const wallpapers = [\n' + script + '\n];');
 
             await navigator.clipboard.writeText(html);
 
@@ -987,7 +987,9 @@ ${key}[func(x)]: 任意の関数を実行
 
         //初期化
         if (true) {
-            document.querySelectorAll("a").forEach(a => a.target = "_blank");
+            document.querySelectorAll("a").forEach(a =>{
+                if(!a.target) a.target = "_blank";
+            });
             const tabLabels = document.querySelectorAll(".tab-labels label");
             const tabContents = document.querySelectorAll(".tab-content");
             tabLabels.forEach((label, index) => {
