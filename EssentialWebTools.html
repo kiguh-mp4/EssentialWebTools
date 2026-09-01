@@ -49,11 +49,11 @@
             display: flex;
             flex: 0 0 auto;
             flex-wrap: wrap;
+            gap: 5px;
         }
 
         .tab-labels>label {
             padding: 10px;
-            margin-right: 5px;
             opacity: 0.5;
             cursor: pointer;
             order: -1;
@@ -69,7 +69,6 @@
 
         .tab-content {
             display: none;
-            /* display: flex; */
             flex-direction: column;
             width: 100%;
             padding: 30px;
@@ -248,7 +247,7 @@
                 <label class="blur"><input type="radio" name="TAB">開発方針</label>
             </div>
             <div class="tab-content blur">
-                <div style="display:flex;flex-wrap: wrap;">
+                <div style="display:flex;flex-wrap: wrap;" id="link-div">
                     <ul class="link-list">
                         <li><a href="https://translate.google.com">Google翻訳</a></li>
                         <li><a href="https://www.deepl.com/ja/translator">DeepL翻訳</a></li>
@@ -328,7 +327,7 @@ ${key}[func(x)]: 任意の関数を実行
                     <div class="separated-content column">
                         <div class="maxsize column">
                             <div class="row">
-                                <input type="file" id="file-selector" accept="image/*|application/pdf" hidden>
+                                <input type="file" id="file-selector" accept="*/*" multiple hidden>
                                 <button class="cell-content" onclick="$('#file-selector').click();">ファイルを開く</button>
                                 <button class="cell-content" id="image-rect-reset">リセット</button>
                             </div>
@@ -409,16 +408,16 @@ ${key}[func(x)]: 任意の関数を実行
                     </ul>
                     <p>
                         本ツールは<a href="https://github.com/kiguh-mp4/EssentialWebTools">GitHub</a>
-                        で公開されています。</p>
+                        で公開されています。<a href="javascript:void(0);"
+                            onclick="updateContent();">ここ</a>をクリックして、データ移行済みの最新HTMLを取得できます。
+                    </p>
                 </div>
             </div>
         </div>
     </div>
     <script>
         const $ = e => document.querySelector(e);
-        const wallpapers = [
-            "bg.png",
-        ];
+        const wallpapers = ["bg.png"];
         const openedFiles = [];
         let wakeLock = null;
         const editor = {
@@ -634,7 +633,7 @@ ${key}[func(x)]: 任意の関数を実行
                 if (ext == "ico") {
                     let name = openedFiles[openedFiles.length - 1].name;
                     if (name.includes(".")) name = name.slice(0, name.lastIndexOf("."));
-                    downloadFile(this.canvasToICO(), name + ".ico");
+                    saveFile(this.canvasToICO(), name + ".ico");
                     return;
                 }
                 if (ext == "zip") {
@@ -643,7 +642,7 @@ ${key}[func(x)]: 任意の関数を実行
                         const list = await this.exportPdfAll();
                         const files = list.map((x, i) => ({ name: `${name} - ${i.toString().padStart(3, "0")}.png`, data: x }));
                         const blob = await generateZipFile(files)
-                        downloadFile(blob, `${name}.zip`);
+                        saveFile(blob, `${name}.zip`);
                     }
                     return;
                 }
@@ -653,7 +652,7 @@ ${key}[func(x)]: 任意の関数を実行
                         const list = await this.exportPdfAll();
                         const files = list.map((x, i) => ({ name: `${name} - ${i.toString().padStart(3, "0")}.png`, data: x }));
                         const blob = await generateZipFile(files)
-                        downloadFile(blob, `${name}.zip`);
+                        saveFile(blob, `${name}.zip`);
                     }
                     return;
                 }
@@ -670,14 +669,14 @@ ${key}[func(x)]: 任意の関数を実行
 
                 if (ext == "webp-lossless") {
                     dstCanvas.toBlob(blob => {
-                        downloadFile(blob, `${name}.webp`);
+                        saveFile(blob, `${name}.webp`);
                     }, "image/webp", 1.0);
 
                     return;
                 }
 
                 dstCanvas.toBlob(blob => {
-                    downloadFile(blob, `${name}.${ext}`);
+                    saveFile(blob, `${name}.${ext}`);
                 }, `image/${ext.replace("jpg", "jpeg")}`);
             },
             canvasToICO: function () {
@@ -941,6 +940,13 @@ ${key}[func(x)]: 任意の関数を実行
             document.body.removeChild(link);
         }
 
+        async function saveFile(blob, file) {
+            const handle = await window.showSaveFilePicker({ suggestedName: file });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+        }
+
         async function generateZipFile(files) {
             const zip = new JSZip();
 
@@ -959,6 +965,24 @@ ${key}[func(x)]: 任意の関数を実行
             });
 
             return blob;
+        }
+
+        async function updateContent() {
+            const response = await fetch("https://raw.githubusercontent.com/kiguh-mp4/EssentialWebTools/refs/heads/main/EssentialWebTools.html");
+            const text = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, "text/html");
+
+            doc.querySelector("#link-div").innerHTML = ($("#link-div") || $(".link-list").parentElement).innerHTML;
+
+            const html = doc.documentElement.outerHTML;
+            const script = wallpapers.map(wallpaper => `"${wallpaper}"`).join(",\n");
+
+            html = html.replace('const wallpapers = ["bg.png"];', 'const wallpapers = [' + script + '];');
+
+            await navigator.clipboard.writeText(html);
+
+            alert("HTMLをクリップボードにコピーしました");
         }
 
         //初期化
@@ -1084,7 +1108,7 @@ ${key}[func(x)]: 任意の関数を実行
                     input1.value = e;
                 }
             });
-            saveButton.addEventListener("click", () => downloadFile(base64ToBlob(input1.value), "image." + input1.value.split(",")[0].match("(?<=/).+(?=;base64)")[0]));
+            saveButton.addEventListener("click", () => saveFile(base64ToBlob(input1.value), "image." + input1.value.split(",")[0].match("(?<=/).+(?=;base64)")[0]));
         }
 
         //正規表現
@@ -1197,16 +1221,31 @@ ${key}[func(x)]: 任意の関数を実行
                 rectChange();
                 editor.rotateHueSat(parseInt(hue.value), parseInt(sat.value) / 255);
             };
-
-            editor.initialize();
-
-            fileSelector.addEventListener("change", e => {
-                [...e.target.files].forEach(x => openedFiles.push(x));
-                const file = e.target.files[0];
+            const handleFiles = (files) => {
+                [...files].forEach(x => openedFiles.push(x));
+                const file = files[0];
                 if (!file) return;
 
                 editor.open(file).then(() => rectReset());
+            };
+
+            editor.initialize();
+
+            document.addEventListener("dragover", (event) => {
+                event.preventDefault();
             });
+
+            document.addEventListener("drop", (event) => {
+                event.preventDefault();
+
+                const files = event.dataTransfer.files;
+
+                if (files.length === 0) return;
+
+                handleFiles(files);
+            });
+
+            fileSelector.addEventListener("change", e => handleFiles(e.target.files));
 
             [rectX, rectY, rectWidth, rectHeight].forEach(x => {
                 x.addEventListener("wheel", rectWheel);
