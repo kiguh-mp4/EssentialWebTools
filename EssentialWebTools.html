@@ -408,8 +408,8 @@ ${key}[func(x)]: 任意の関数を実行
                     </ul>
                     <p>
                         本ツールは<a href="https://github.com/kiguh-mp4/EssentialWebTools">GitHub</a>
-                        で公開されています。<a href="javascript:void(0);"
-                            onclick="updateContent();" target="_self">ここ</a>をクリックして、データ移行済みの最新HTMLを取得できます。
+                        で公開されています。<a href="javascript:void(0);" onclick="updateContent();"
+                            target="_self">ここ</a>をクリックして、データ移行済みの最新HTMLを取得できます。
                     </p>
                 </div>
             </div>
@@ -941,10 +941,27 @@ ${key}[func(x)]: 任意の関数を実行
         }
 
         async function saveFile(blob, file) {
-            const handle = await window.showSaveFilePicker({ suggestedName: file });
-            const writable = await handle.createWritable();
-            await writable.write(blob);
-            await writable.close();
+            try {
+                const match = file.match(/\.([^.]+)$/);
+                const extension = match ? match[1] : "";
+                const handle = await window.showSaveFilePicker({
+                    id: "image-save-location",
+                    suggestedName: file,
+                    types: [
+                        {
+                            description: `${extension.toUpperCase()} file`,
+                            accept: {
+                                [blob.type]: [`.${extension}`]
+                            }
+                        }
+                    ]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } catch (error) {
+                downloadFile(blob, file);
+            }
         }
 
         async function generateZipFile(files) {
@@ -987,8 +1004,8 @@ ${key}[func(x)]: 任意の関数を実行
 
         //初期化
         if (true) {
-            document.querySelectorAll("a").forEach(a =>{
-                if(!a.target) a.target = "_blank";
+            document.querySelectorAll("a").forEach(a => {
+                if (!a.target) a.target = "_blank";
             });
             const tabLabels = document.querySelectorAll(".tab-labels label");
             const tabContents = document.querySelectorAll(".tab-content");
