@@ -236,7 +236,7 @@
     </style>
 </head>
 
-<body>
+<body style="background-size: cover;">
     <div class="container blur">
         <div class="tab-switch">
             <div class="tab-labels">
@@ -1027,6 +1027,7 @@ ${key}[func(x)]: 任意の関数を実行
             } else {
                 document.body.style.background = `url("${wallpaper}")`;
             }
+            document.body.style.backgroundSize = "cover";
 
             (async () => await keepScreenOn())();
         }
