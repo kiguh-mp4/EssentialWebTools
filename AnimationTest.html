@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>moveTo / fall</title>
+
+    <style>
+        .item {
+            position: absolute;
+
+            width: 50px;
+            height: 25px;
+
+            background: red;
+            border-radius: 50%;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="canvas"></div>
+
+    <script>
+        function createPhysicsElement(x, y, className) {
+            const element = document.createElement("div");
+            element.classList.add(className);
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+
+            document.querySelector("#canvas").appendChild(element);
+
+            function getPosition() {
+                const rect = element.getBoundingClientRect();
+                return {
+                    x: rect.left + window.scrollX,
+                    y: rect.top + window.scrollY,
+                    width: rect.top - rect.bottom,
+                    height: rect.right - rect.left
+                };
+            }
+
+            element.moveTo = function (x, y, ms) {
+                return new Promise(resolve => {
+                    const start = getPosition();
+                    const startTime = performance.now();
+
+                    function easeInOutCubic(t) {
+                        if (t < 0.5) {
+                            return 4 * t * t * t;
+                        } else {
+                            return 1 - Math.pow(-2 * t + 2, 3) / 2;
+                        }
+                    }
+
+                    function animate(now) {
+                        let progress = Math.min((now - startTime) / ms, 1);
+
+                        const eased = easeInOutCubic(progress);
+                        const currentX = start.x + x * eased;
+                        const currentY = start.y + y * eased;
+
+                        element.style.left = `${currentX}px`;
+                        element.style.top = `${currentY}px`;
+
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            element.style.left = `${start.x + x}px`;
+                            element.style.top = `${start.y + y}px`;
+
+                            resolve(element);
+                        }
+                    }
+
+                    requestAnimationFrame(animate);
+                });
+            };
+
+            element.fall = function () {
+                const gravity = 0.5;
+                let target = getPosition();
+                let y = target.y;
+                let velocityY = 0;
+                let lastTime = performance.now();
+
+                function animate(now) {
+                    const deltaTime = (now - lastTime) / 16.666;
+
+                    lastTime = now;
+                    velocityY += gravity * deltaTime;
+
+                    y += velocityY * deltaTime;
+
+                    element.style.top = `${y}px`;
+
+                    const bottom = window.innerHeight + window.scrollY - target.height;
+
+                    if (y < bottom) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        element.style.top = `${bottom}px`;
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            };
+
+            element.wait = function (ms) {
+                return new Promise(resolve => setTimeout(() => resolve(element), ms));
+            };
+
+            return element;
+        }
+
+        const delayFactor = 3;
+
+        for(let i = 0; i < 8; i++){
+            createPhysicsElement(0, 200 + 30 * i, "item")
+                .wait(i * 500 * delayFactor)
+                .then(x => x.moveTo(200, 0, 500))
+            
+            const delay = 2000 - (i + 1) * 250;
+            
+            createPhysicsElement(0, 200 + 30 * i, "item")
+                .wait(i * 500 * delayFactor)
+                .then(x => x.moveTo(200, 0, 500))
+                .then(x => x.wait(delay * delayFactor))
+                .then(x => x.moveTo(200, 0, 500))
+                .then(x => x.fall());
+
+            createPhysicsElement(0, 200 + 30 * i, "item")
+                .wait(i * 500 * delayFactor)
+                .then(x => x.moveTo(200, 0, 500))
+                .then(x => x.wait((i < 2 ? delay + 2000 : delay) * delayFactor))
+                .then(x => x.moveTo(400, 0, 500))
+                .then(x => x.fall());
+        }
+
+
+        
+    </script>
+
+</body>
+
+</html>
