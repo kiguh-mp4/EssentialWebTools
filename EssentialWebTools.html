@@ -273,11 +273,13 @@
                         <option value="unicode">Unicode Escape</option>
                         <option value="base64">Base64</option>
                         <option value="ascii">ASCII</option>
-                        <option value="json">Json Format</option>
-                        <option value="sort">Sort</option>
-                        <option value="distinct">Distinct</option>
+                        <option value="json">Json整形</option>
+                        <option value="sort">並び替え</option>
+                        <option value="distinct">重複削除</option>
                         <option value="base64image">Base64 Image</option>
                         <option value="copy">転写</option>
+                        <option value="time">累計時間計算</option>
+                        <option value="eval">コード実行</option>
                     </select>
                     <button id="text-exchange-save" hidden>ファイルとして保存</button>
                 </div>
@@ -1096,6 +1098,27 @@ ${key}[func(x)]: 任意の関数を実行
                             break;
                         case "copy":
                             content.innerText = input1.value;
+                            break;
+                        case "time":
+                            const matches = input1.value.matchAll(/(\d+)\s*H(?:\s*(\d+)\s*M)?|(\d+)\s*M/gi);
+                            let totalMinutes = 0;
+
+                            for (const match of matches) {
+                                if (match[1] !== undefined) {
+                                    totalMinutes += Number(match[1]) * 60;
+                                    totalMinutes += Number(match[2] || 0);
+                                } else {
+                                    totalMinutes += Number(match[3]);
+                                }
+                            }
+
+                            const hours = Math.floor(totalMinutes / 60);
+                            const minutes = totalMinutes % 60;
+
+                            input2.value = `${hours}h${minutes}m`;
+                            break;
+                        case "eval":
+                            input2.value = eval(input1.value);
                             break;
                     }
                 } catch (e) {
